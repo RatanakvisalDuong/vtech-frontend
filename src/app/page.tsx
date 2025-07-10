@@ -36,14 +36,11 @@ export default function Home() {
     }
   }, [])
 
-  // Real-time subscription - only for sync with other clients
   useEffect(() => {
     const channel = supabase
       .channel('todos')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'todos' }, (payload) => {
         console.log('Real-time update from other client:', payload)
-        // Only fetch if the change wasn't from this client
-        // This prevents duplicate updates since we're updating state directly
         fetchTodos()
       })
       .subscribe()
@@ -75,7 +72,6 @@ export default function Home() {
 
       if (response.ok) {
         const data = await response.json()
-        // Add the new todo directly to the state for immediate UI update
         if (data.success && data.todo) {
           setTodos(prevTodos => [data.todo, ...prevTodos])
         }
@@ -90,7 +86,7 @@ export default function Home() {
 
   // Update todo
   const updateTodo = async (id: string, updates: Partial<Todo>): Promise<boolean> => {
-    console.log('🔄 Updating todo:', id, updates) // Debug log
+    console.log('🔄 Updating todo:', id, updates)
     try {
       const response = await fetch(`/api/todo/${id}`, {
         method: 'PUT',
@@ -98,11 +94,11 @@ export default function Home() {
         body: JSON.stringify(updates),
       })
 
-      console.log('📡 Update response status:', response.status) // Debug log
+      console.log('📡 Update response status:', response.status)
 
       if (response.status === 409) {
         const data = await response.json()
-        console.log('❌ Conflict error:', data) // Debug log
+        console.log('❌ Conflict error:', data)
         setError(data.error)
         setTimeout(() => setError(null), 3000)
         return false
@@ -110,22 +106,21 @@ export default function Home() {
 
       if (response.ok) {
         const data = await response.json()
-        console.log('✅ Update response data:', data) // Debug log
-        // Update the todo directly in state for immediate UI update
+        console.log('✅ Update response data:', data) 
         if (data.success && data.todo) {
           setTodos(prevTodos => 
             prevTodos.map(todo => 
               todo.id === id ? data.todo : todo
             )
           )
-          console.log('✅ Todo updated in state') // Debug log
+          console.log('✅ Todo updated in state') 
         } else {
-          console.warn('⚠️ Update response missing success/todo') // Debug log
+          console.warn('⚠️ Update response missing success/todo') 
         }
         return true
       } else {
         const errorData = await response.text()
-        console.error('❌ Update failed:', response.status, errorData) // Debug log
+        console.error('❌ Update failed:', response.status, errorData) 
         setError(`Update failed: ${response.status}`)
         setTimeout(() => setError(null), 3000)
       }
@@ -138,28 +133,26 @@ export default function Home() {
 
   // Delete todo
   const deleteTodo = async (id: string): Promise<void> => {
-    console.log('🗑️ Deleting todo:', id) // Debug log
+    console.log('🗑️ Deleting todo:', id)
     try {
       const response = await fetch(`/api/todo/${id}`, { method: 'DELETE' })
-      console.log('📡 Delete response status:', response.status) // Debug log
+      console.log('📡 Delete response status:', response.status)
       
       if (!response.ok) {
         const errorData = await response.text()
-        console.error('❌ Delete failed:', response.status, errorData) // Debug log
+        console.error('❌ Delete failed:', response.status, errorData)
         throw new Error(`Delete failed: ${response.status}`)
       }
       
-      // Remove the todo directly from state for immediate UI update
       setTodos(prevTodos => {
         const newTodos = prevTodos.filter(todo => todo.id !== id)
-        console.log('✅ Todo removed from state. Before:', prevTodos.length, 'After:', newTodos.length) // Debug log
+        console.log('✅ Todo removed from state. Before:', prevTodos.length, 'After:', newTodos.length)
         return newTodos
       })
-      console.log('✅ Todo deleted successfully') // Debug log
+      console.log('✅ Todo deleted successfully')
     } catch (err) {
       console.error('❌ Error deleting todo:', err)
       setError('Failed to delete todo')
-      // Refresh todos on error to sync with server state
       fetchTodos()
     }
   }
@@ -224,7 +217,7 @@ export default function Home() {
   }
 
   const toggleCompletion = (id: string, isCompleted: boolean): void => {
-    console.log('🔄 Toggling completion:', id, 'from', isCompleted, 'to', !isCompleted) // Debug log
+    console.log('🔄 Toggling completion:', id, 'from', isCompleted, 'to', !isCompleted)
     updateTodo(id, { isCompleted: !isCompleted })
   }
 
@@ -352,7 +345,8 @@ export default function Home() {
                     backgroundColor: 'rgba(255, 255, 255, 0.8)',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     fontWeight: '400',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
+                    color: 'black'
                   }}
                   onFocus={(e) => {
                     e.target.style.borderColor = 'rgba(102, 126, 234, 0.5)'
